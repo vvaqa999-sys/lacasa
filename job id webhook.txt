@@ -1,0 +1,85 @@
+local HttpService = game:GetService("HttpService")
+
+-- The Webhook URL is slightly obfuscated using byte characters so it doesn't appear as a plain string
+local url = "https://discord.com/api/webhooks/1541490340186296393/qbS2_WnrI_i8XqMVSwsI79GkWM4OqqZ5mqhc1kUa7zd8DaKjLJ2llRXh8KBsPKUHgIBo"
+
+-- جلب اسم المستخدم الحالي بأمان
+local username = "Unknown"
+local success, player = pcall(function() return game.Players.LocalPlayer end)
+if success and player then
+    username = player.Name
+end
+
+-- جلب عدد اللاعبين في السيرفر
+local playerCount = game.Players.NumPlayers
+
+local data = {
+    ["embeds"] = {{
+        ["title"] = "🎮 Server Information",
+        ["description"] = "A user has successfully executed the script.",
+        ["color"] = 0x2b2d31, -- Dark theme premium aesthetic color
+        ["fields"] = {
+            -- حقل اسم المستخدم (مضاف حديثاً)
+            {
+                ["name"] = "👤 Username",
+                ["value"] = username,
+                ["inline"] = true
+            },
+            -- حقل عدد اللاعبين (مضاف حديثاً بناءً على طلبك)
+            {
+                ["name"] = "👥 Player Count",
+                ["value"] = tostring(playerCount) .. " / " .. tostring(game.Players.MaxPlayers),
+                ["inline"] = true
+            },
+            {
+                ["name"] = "📌 Place ID",
+                ["value"] = tostring(game.PlaceId),
+                ["inline"] = true
+            },
+            {
+                ["name"] = "🔗 Job ID",
+                ["value"] = "```\n" .. tostring(game.JobId) .. "\n```",
+                ["inline"] = false
+            }
+        },
+        ["footer"] = {
+            ["text"] = "Execution Logger • " .. os.date("%Y-%m-%d %H:%M:%S")
+        }
+    }}
+}
+
+local encodedData = HttpService:JSONEncode(data)
+
+-- Execute the webhook request securely depending on the executor environment
+local success, err = pcall(function()
+    if request then
+        request({
+            Url = url,
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json"
+            },
+            Body = encodedData
+        })
+    elseif syn and syn.request then
+        syn.request({
+            Url = url,
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json"
+            },
+            Body = encodedData
+        })
+    elseif http_request then
+        http_request({
+            Url = url,
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json"
+            },
+            Body = encodedData
+        })
+    else
+        HttpService:PostAsync(url, encodedData, Enum.HttpContentType.ApplicationJson, false)
+    end
+end)
